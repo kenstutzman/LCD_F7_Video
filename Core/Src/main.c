@@ -60,6 +60,14 @@ static void MX_DMA2D_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+extern LTDC_HandleTypeDef hLtdcHandler;
+TS_StateTypeDef  ts;
+char xTouchStr[10];
+
+void LTDC_IRQHandler(void)
+{
+  HAL_LTDC_IRQHandler(&hLtdcHandler);
+}
 
 /* USER CODE END 0 */
 
@@ -70,6 +78,12 @@ static void MX_DMA2D_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+	/* Enable the CPU Cache */
+	/* Enable I-Cache */
+	SCB_EnableICache();
+	/* Enable D-Cache */
+	SCB_EnableDCache();
 
   /* USER CODE END 1 */
 
@@ -94,16 +108,37 @@ int main(void)
   MX_CRC_Init();
   MX_DMA2D_Init();
   /* USER CODE BEGIN 2 */
+    BSP_SDRAM_Init(); /* Initializes the SDRAM device */
+    __HAL_RCC_CRC_CLK_ENABLE(); /* Enable the CRC Module */
 
+    BSP_TS_Init(480, 272);
+
+    BSP_LCD_Init();
+    BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
+    BSP_LCD_DisplayOn();
+
+    BSP_LCD_SelectLayer(0);
+    BSP_LCD_Clear(LCD_COLOR_BLUE);
+
+
+    BSP_LCD_DisplayStringAt(20, 20, (uint8_t *)"Hello!", LEFT_MODE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  BSP_TS_GetState(&ts);
+	  sprintf(xTouchStr, "X: %3d", ts.touchX[0]);
+	  BSP_LCD_DisplayStringAt(20, 20, (uint8_t *)xTouchStr, LEFT_MODE);
+
+	  sprintf(xTouchStr, "Y: %3d", ts.touchY[0]);
+	  BSP_LCD_DisplayStringAt(20, 60, (uint8_t *)xTouchStr, LEFT_MODE);
+
 	  HAL_GPIO_TogglePin(PD4_STATUS_LED_GPIO_Port, PD4_STATUS_LED_Pin);
-	  HAL_Delay(500);
-    /* USER CODE END WHILE */
+
+	  HAL_Delay(50);
+	  /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
